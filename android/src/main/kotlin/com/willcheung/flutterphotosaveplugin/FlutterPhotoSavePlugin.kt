@@ -3,18 +3,19 @@ package com.willcheung.flutterphotosaveplugin
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import java.io.File;
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.PluginRegistry.Registrar
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+
 
 class FlutterPhotoSavePlugin: MethodCallHandler {
   companion object {
