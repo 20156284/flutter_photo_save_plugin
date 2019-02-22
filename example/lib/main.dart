@@ -1,56 +1,70 @@
-import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_photo_save_plugin/flutter_photo_save_plugin.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await FlutterPhotoSavePlugin.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
-  }
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
+      title: 'Save image to gallery',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  GlobalKey _globalKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: Text("Save image to gallery"),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
-        ),
-      ),
-    );
+          child: Column(
+            children: <Widget>[
+              RepaintBoundary(
+                key: _globalKey,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.red,
+                ),
+              ),
+              Container(
+                child: RaisedButton(
+                  onPressed: _saved,
+                  child: Text("保存到相册"),
+                ),
+                width: 100,
+                height: 50,
+              )
+            ],
+          ),
+        ));
+  }
+
+  _saved() async {
+    RenderRepaintBoundary boundary =
+        _globalKey.currentContext.findRenderObject();
+    ui.Image image = await boundary.toImage();
+    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final result =
+        await FlutterPhotoSavePlugin.save(byteData.buffer.asUint8List());
+    print(result);
   }
 }

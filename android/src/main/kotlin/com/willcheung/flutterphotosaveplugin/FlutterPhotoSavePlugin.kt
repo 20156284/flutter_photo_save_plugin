@@ -15,11 +15,52 @@ class FlutterPhotoSavePlugin: MethodCallHandler {
     }
   }
 
-  override fun onMethodCall(call: MethodCall, result: Result) {
-    if (call.method == "getPlatformVersion") {
-      result.success("Android ${android.os.Build.VERSION.RELEASE}")
+  override fun onMethodCall(call: MethodCall, result: Result): Unit {
+    if (call.method == "saveImageToGallery") {
+      val image = call.arguments as ByteArray
+      result.success(saveImageToGallery(BitmapFactory.decodeByteArray(image,0,image.size)))
     } else {
       result.notImplemented()
     }
+  }
+
+  private fun saveImageToGallery(bmp: Bitmap): Boolean {
+    val context = registrar.activeContext().applicationContext
+    val storePath =  Environment.getExternalStorageDirectory().absolutePath + File.separator + getApplicationName()
+    val appDir = File(storePath)
+    if (!appDir.exists()) {
+      appDir.mkdir()
+    }
+    val fileName = System.currentTimeMillis().toString() + ".png"
+    val file = File(appDir, fileName)
+    try {
+      val fos = FileOutputStream(file)
+      val isSuccess = bmp.compress(Bitmap.CompressFormat.PNG, 60, fos)
+      fos.flush()
+      fos.close()
+      val uri = Uri.fromFile(file)
+      context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
+      return isSuccess
+    } catch (e: IOException) {
+      e.printStackTrace()
+    }
+    return false
+  }
+
+  private fun getApplicationName(): String {
+    val context = registrar.activeContext().applicationContext
+    var ai: ApplicationInfo? = null
+    try {
+      ai = context.packageManager.getApplicationInfo(context.packageName, 0)
+    } catch (e: PackageManager.NameNotFoundException) {
+    }
+    var appName: String
+    if (ai != null) {
+      val charSequence = context.packageManager.getApplicationLabel(ai)
+      appName = StringBuilder(charSequence.length).append(charSequence).toString()
+    } else {
+      appName = "flutter_photo_save_plugin"
+    }
+    return  appName
   }
 }
